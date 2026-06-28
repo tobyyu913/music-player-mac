@@ -197,7 +197,7 @@ struct WalkmanView: View {
     // MARK: Functional transport keys
 
     private var transportButtons: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 9) {
             key("backward.fill") { engine.previous() }
             key(engine.isPlaying ? "pause.fill" : "play.fill", tint: orange, big: true) { engine.togglePlay() }
             key("forward.fill") { engine.next() }
@@ -210,16 +210,16 @@ struct WalkmanView: View {
                      action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name)
-                .font(.system(size: big ? 12 : 10, weight: .bold))
+                .font(.system(size: big ? 17 : 14, weight: .bold))
                 .foregroundStyle(tint == nil ? Color(white: 0.22) : .white)
-                .frame(width: big ? 42 : 32, height: 22)
+                .frame(width: big ? 56 : 44, height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: 5)
                         .fill(tint != nil
                               ? LinearGradient(colors: [tint!, tint!.opacity(0.7)], startPoint: .top, endPoint: .bottom)
                               : LinearGradient(colors: [silver, silverDark], startPoint: .top, endPoint: .bottom))
                 )
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(.black.opacity(0.3), lineWidth: 0.5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(.black.opacity(0.3), lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.3), radius: 1, y: 1)
         }
         .buttonStyle(.plain)

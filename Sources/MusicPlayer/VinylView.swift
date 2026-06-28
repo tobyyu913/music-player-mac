@@ -6,6 +6,22 @@ import SwiftUI
 struct VinylView: View {
     @EnvironmentObject private var engine: PlayerEngine
 
+    /// 0 at the start of the track, 1 at the end — drives the tonearm sweep.
+    private var progress: Double {
+        let dur = engine.now?.duration ?? 0
+        guard dur > 0 else { return 0 }
+        return min(1, max(0, engine.currentTime / dur))
+    }
+
+    /// Real-turntable behaviour: parked off the record when stopped; otherwise the stylus
+    /// rides the outer groove at the start (≈16°) and tracks inward toward the label (≈31°)
+    /// as the song plays. When the next track starts, progress resets and the arm swings
+    /// back out.
+    private var tonearmAngle: Double {
+        guard engine.isPlaying || engine.currentTime > 0 else { return 4 }
+        return 16 + progress * 15
+    }
+
     var body: some View {
         if engine.isFullScreen {
             lencoTurntable
@@ -120,8 +136,7 @@ struct VinylView: View {
     }
 
     private func tonearm(side: CGFloat) -> some View {
-        let angle: Double = engine.isPlaying ? 24 : 8
-        return ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .topTrailing) {
             Circle()
                 .fill(Color(white: 0.22))
                 .frame(width: max(24, side * 0.09), height: max(24, side * 0.09))
@@ -137,50 +152,50 @@ struct VinylView: View {
                         .frame(width: 14, height: 18)
                 }
                 .offset(y: 6)
-                .rotationEffect(.degrees(angle), anchor: .top)
+                .rotationEffect(.degrees(tonearmAngle), anchor: .top)
                 .padding(.trailing, side * 0.04)
                 .padding(.top, side * 0.04)
         }
         .frame(width: side, height: side, alignment: .topTrailing)
-        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: engine.isPlaying)
+        .animation(.easeInOut(duration: 0.5), value: tonearmAngle)
     }
 
     // MARK: Lenco control pod (bottom-right)
 
     private var controlPod: some View {
-        VStack(spacing: 7) {
+        VStack(spacing: 10) {
             HStack {
-                Text("OFF").font(.system(size: 7, weight: .bold)).foregroundStyle(.white.opacity(0.6))
+                Text("OFF").font(.system(size: 10, weight: .bold)).foregroundStyle(.white.opacity(0.6))
                 Spacer()
                 knob
             }
-            HStack(spacing: 6) {
+            HStack(spacing: 9) {
                 padButton("STOP") { engine.stop() }
                 padButton("START") { if !engine.isPlaying { engine.togglePlay() } }
             }
-            HStack(spacing: 6) {
+            HStack(spacing: 9) {
                 padIcon("backward.fill") { engine.previous() }
                 padIcon(engine.isPlaying ? "pause.fill" : "play.fill") { engine.togglePlay() }
                 padIcon("forward.fill") { engine.next() }
             }
         }
-        .padding(10)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 14)
                 .fill(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.09)],
                                      startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(.black.opacity(0.5), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(.black.opacity(0.5), lineWidth: 1))
         )
-        .shadow(color: .black.opacity(0.5), radius: 6, y: 3)
+        .shadow(color: .black.opacity(0.5), radius: 8, y: 4)
     }
 
     private var knob: some View {
         Circle()
             .fill(LinearGradient(colors: [Color(white: 0.85), Color(white: 0.45)],
                                  startPoint: .topLeading, endPoint: .bottomTrailing))
-            .frame(width: 26, height: 26)
+            .frame(width: 42, height: 42)
             .overlay(
-                Rectangle().fill(Color(white: 0.2)).frame(width: 2, height: 9).offset(y: -5)
+                Rectangle().fill(Color(white: 0.2)).frame(width: 3, height: 14).offset(y: -8)
             )
             .overlay(Circle().stroke(.black.opacity(0.3), lineWidth: 1))
     }
@@ -188,11 +203,11 @@ struct VinylView: View {
     private func padButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 8, weight: .heavy))
+                .font(.system(size: 13, weight: .heavy))
                 .foregroundStyle(Color(white: 0.2))
-                .frame(width: 42, height: 18)
-                .background(keyGradient, in: RoundedRectangle(cornerRadius: 3))
-                .overlay(RoundedRectangle(cornerRadius: 3).stroke(.black.opacity(0.3), lineWidth: 0.5))
+                .frame(width: 78, height: 40)
+                .background(keyGradient, in: RoundedRectangle(cornerRadius: 7))
+                .overlay(RoundedRectangle(cornerRadius: 7).stroke(.black.opacity(0.3), lineWidth: 0.5))
         }
         .buttonStyle(.plain)
     }
@@ -200,11 +215,11 @@ struct VinylView: View {
     private func padIcon(_ name: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 19, weight: .bold))
                 .foregroundStyle(Color(white: 0.2))
-                .frame(width: 28, height: 18)
-                .background(keyGradient, in: RoundedRectangle(cornerRadius: 3))
-                .overlay(RoundedRectangle(cornerRadius: 3).stroke(.black.opacity(0.3), lineWidth: 0.5))
+                .frame(width: 56, height: 40)
+                .background(keyGradient, in: RoundedRectangle(cornerRadius: 7))
+                .overlay(RoundedRectangle(cornerRadius: 7).stroke(.black.opacity(0.3), lineWidth: 0.5))
         }
         .buttonStyle(.plain)
     }
@@ -253,7 +268,7 @@ struct DeviceTransportBar: View {
     let style: Style
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 18) {
             key("backward.fill") { engine.previous() }
             key(engine.isPlaying ? "pause.fill" : "play.fill", big: true) { engine.togglePlay() }
             key("forward.fill") { engine.next() }
@@ -269,11 +284,11 @@ struct DeviceTransportBar: View {
             : AnyShapeStyle(Color.white.opacity(0.12))
         return Button(action: action) {
             Image(systemName: name)
-                .font(.system(size: big ? 18 : 13, weight: .bold))
+                .font(.system(size: big ? 26 : 19, weight: .bold))
                 .foregroundStyle(.white)
-                .frame(width: big ? 54 : 40, height: 34)
-                .background(bg, in: RoundedRectangle(cornerRadius: 11))
-                .overlay(RoundedRectangle(cornerRadius: 11).stroke(.black.opacity(0.18), lineWidth: 0.5))
+                .frame(width: big ? 78 : 60, height: 52)
+                .background(bg, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(.black.opacity(0.18), lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.3), radius: 1, y: 1)
         }
         .buttonStyle(.plain)
