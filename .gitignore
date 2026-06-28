@@ -1,0 +1,5 @@
+.build/
+.swiftpm/
+*.xcodeproj
+Music Player.app/
+.DS_Store
