@@ -68,6 +68,7 @@ struct VinylView: View {
             record(diameter: d)
                 .rotationEffect(.degrees(engine.spin))
 
+            sheen(diameter: d)       // ambient reflection — stays put while the disc spins
             tonearm(side: d)
         }
         .frame(width: d * 1.1, height: d * 1.1)
@@ -80,6 +81,7 @@ struct VinylView: View {
             let side = min(geo.size.width, geo.size.height)
             ZStack {
                 record(diameter: side).rotationEffect(.degrees(engine.spin))
+                sheen(diameter: side)
                 tonearm(side: side)
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -98,12 +100,6 @@ struct VinylView: View {
                     .stroke(Color.white.opacity(0.05), lineWidth: 1)
                     .padding(CGFloat(i) * (diameter / 34))
             }
-
-            Circle()
-                .trim(from: 0.0, to: 0.18)
-                .stroke(Color.white.opacity(0.18), lineWidth: diameter / 2)
-                .scaleEffect(0.5)
-                .blur(radius: 12)
 
             Group {
                 if let art = engine.artwork {
@@ -133,6 +129,17 @@ struct VinylView: View {
             Circle().stroke(Color.white.opacity(0.3), lineWidth: 1).frame(width: 10, height: 10)
         }
         .frame(width: diameter, height: diameter)
+    }
+
+    /// A fixed ambient-light reflection that sits above the spinning vinyl (does NOT rotate).
+    private func sheen(diameter: CGFloat) -> some View {
+        Circle()
+            .trim(from: 0.0, to: 0.18)
+            .stroke(Color.white.opacity(0.18), lineWidth: diameter / 2)
+            .scaleEffect(0.5)
+            .blur(radius: 12)
+            .frame(width: diameter, height: diameter)
+            .allowsHitTesting(false)
     }
 
     private func tonearm(side: CGFloat) -> some View {
