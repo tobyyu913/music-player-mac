@@ -74,9 +74,9 @@ struct ContentView: View {
                     .frame(width: geo.size.width * 0.62)
                     .frame(maxHeight: .infinity)
 
-                VStack(alignment: .leading, spacing: 22) {
-                    DigitalClockView()
-                    AlarmView()
+                VStack(alignment: .leading, spacing: 26) {
+                    DigitalClockView(large: true)
+                    AlarmView(large: true)
                     Spacer()
                     nowPlaying
                     statusBanner

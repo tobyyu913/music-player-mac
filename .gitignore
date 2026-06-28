@@ -3,3 +3,5 @@
 *.xcodeproj
 Music Player.app/
 .DS_Store
+*.dmg
+*.apk
