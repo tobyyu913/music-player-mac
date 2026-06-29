@@ -55,6 +55,7 @@ struct ContentView: View {
                 DigitalClockView()
                 Spacer()
                 AlarmView()
+                spotifyButton
             }
             Spacer(minLength: 2)
             device.frame(height: 290)
@@ -75,7 +76,11 @@ struct ContentView: View {
                     .frame(maxHeight: .infinity)
 
                 VStack(alignment: .leading, spacing: 26) {
-                    DigitalClockView(large: true)
+                    HStack(alignment: .top) {
+                        DigitalClockView(large: true)
+                        Spacer()
+                        spotifyButton
+                    }
                     AlarmView(large: true)
                     Spacer()
                     nowPlaying
@@ -105,6 +110,17 @@ struct ContentView: View {
         .buttonStyle(.plain)
         .help("Switch between Disc and Walkman")
         .padding(16)
+    }
+
+    // Top-corner Spotify launcher.
+    private var spotifyButton: some View {
+        Button { engine.openSpotify() } label: {
+            SpotifyMark()
+                .frame(width: 40, height: 40)
+                .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+        }
+        .buttonStyle(.plain)
+        .help("Open Spotify")
     }
 
     @ViewBuilder
@@ -143,5 +159,36 @@ struct ContentView: View {
             RadialGradient(colors: [engine.accent.opacity(0.30), .clear],
                            center: .bottomTrailing, startRadius: 10, endRadius: 520)
         }
+    }
+}
+
+/// The Spotify logo: a green disc with three nested arcs.
+struct SpotifyMark: View {
+    var body: some View {
+        GeometryReader { geo in
+            let w = min(geo.size.width, geo.size.height)
+            ZStack {
+                Circle().fill(Color(red: 0.11, green: 0.73, blue: 0.33))
+                Canvas { ctx, _ in
+                    // Three "smile" arcs bulging upward, decreasing in size.
+                    let arcs: [(y: CGFloat, inset: CGFloat)] = [
+                        (0.40, 0.20), (0.55, 0.27), (0.69, 0.34)
+                    ]
+                    for a in arcs {
+                        let y = w * a.y
+                        let x0 = w * a.inset
+                        let x1 = w * (1 - a.inset)
+                        var p = Path()
+                        p.move(to: CGPoint(x: x0, y: y))
+                        p.addQuadCurve(to: CGPoint(x: x1, y: y),
+                                       control: CGPoint(x: w / 2, y: y - w * 0.11))
+                        ctx.stroke(p, with: .color(.black.opacity(0.92)),
+                                   style: StrokeStyle(lineWidth: w * 0.075, lineCap: .round))
+                    }
+                }
+            }
+            .frame(width: w, height: w)
+        }
+        .aspectRatio(1, contentMode: .fit)
     }
 }
